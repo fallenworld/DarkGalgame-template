@@ -4,16 +4,17 @@ import os
 import fileinput
 from optparse import OptionParser
 
-EXTERNAL_BUILD_SCRIPTS_DIR = "%s/build/libs/build-scripts"
+EXTERNAL_BUILD_SCRIPTS_DIR = "%s/build/external/build-scripts"
 ANDROID_BUILD_TOOLS_DIR = "%s/build/android"
 ANDROID_MAKE_TOOLS_SCRIPT = "%s/build/tools/make_standalone_toolchain.py"
 
-EXTERNAL_BUILD_SCRIPTS = ["gettext-android-build.sh", 
-                          "glib-android-build.sh", 
-                          "libffi-android-build.sh", 
-                          "libiconv-android-build.sh", 
-                          "libpng-android-build.sh", 
-                          "pcre-android-build.sh"]
+EXTERNAL_BUILD_SCRIPTS = [
+    "gettext-android-build.sh", 
+    "glib-android-build.sh", 
+    "libffi-android-build.sh", 
+    "libiconv-android-build.sh", 
+    "libpng-android-build.sh", 
+    "pcre-android-build.sh"]
 
 
 def fileReplace(fileName, rawStr, replaceStr):
@@ -39,7 +40,7 @@ def main():
         parser.error("android NDK directory not set")
     if options.output == None:
         parser.error("output directory not set")
-    options.projectName = "DarkGalgame"
+    options.projectName = "DarkGalgame-test"
         
     #copy original files to output directory
     print "copy project files"

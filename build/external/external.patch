@@ -1,0 +1,35 @@
+--- /home/fallenworld/dev/android/projects/DarkGalgame_template/build/external/src/gettext-0.19.8.1/gettext-tools/libgrep/nl_langinfo.c	2016-06-11 21:00:26.000000000 +0800
++++ ../build/external/src/gettext-0.19.8.1/gettext-tools/libgrep/nl_langinfo.c	2017-09-13 16:10:01.296979428 +0800
+@@ -28,6 +28,24 @@
+ # include <stdio.h>
+ #endif
+ 
++#ifdef __ANDROID__
++# define INT_CURR_SYMBOL   10100
++# define MON_DECIMAL_POINT 10101
++# define MON_THOUSANDS_SEP 10102
++# define MON_GROUPING      10103
++# define POSITIVE_SIGN     10104
++# define NEGATIVE_SIGN     10105
++# define FRAC_DIGITS       10106
++# define INT_FRAC_DIGITS   10107
++# define P_CS_PRECEDES     10108
++# define N_CS_PRECEDES     10109
++# define P_SEP_BY_SPACE    10110
++# define N_SEP_BY_SPACE    10111
++# define P_SIGN_POSN       10112
++# define N_SIGN_POSN       10113
++# define GROUPING          10114
++#endif
++
+ /* Return the codeset of the current locale, if this is easily deducible.
+    Otherwise, return "".  */
+ static char *
+--- /home/fallenworld/dev/android/projects/DarkGalgame_template/build/external/src/glib-2.54.0/android.cache	1970-01-01 08:00:00.000000000 +0800
++++ ../build/external/src/glib-2.54.0/android.cache	2017-09-13 18:01:16.766319855 +0800
+@@ -0,0 +1,5 @@
++    glib_cv_long_long_format=ll
++    glib_cv_stack_grows=no
++    glib_cv_uscore=no
++    ac_cv_func_posix_getpwuid_r=no
++    ac_cv_func_posix_getgrgid_r=no

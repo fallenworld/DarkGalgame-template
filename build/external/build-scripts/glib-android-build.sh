@@ -16,4 +16,4 @@ PKG_CONFIG_PATH="$SYSROOT/usr/lib/pkgconfig"
 PKG_CONFIG_PATH=$PKG_CONFIG_PATH CFLAGS="$CFLAGS" CXXFLAGS="$CXXFLAGS" LDFLAGS="$LDFLAGS" ./configure $CONFLAGS &&
 
 #make & install
-make && make install
+make -j4 && make install

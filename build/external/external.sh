@@ -1,56 +1,74 @@
 #!/bin/bash
 
+
 SCRIPT_DIR=$(cd `dirname $0`; pwd)
+
+. $SCRIPT_DIR/../../LIBS_VER
+
+ANDROID_BUILD=/home/fallenworld/dev/android/projects/DarkGalgame-dev/build/android
+LIB_DIR=$ANDROID_BUILD/sysroot/usr/lib
+JNI_LIBS=(
+    libglib-2.0.so
+    libgthread-2.0.so
+    libiconv.so
+    libintl.so
+    libpcre.so
+)
+
 
 case $1 in
 
 build)
-    cd $SCRIPT_DIR/../..
-    patch -p1 < $SCRIPT_DIR/external.patch &&
+    #build external libraries
     {
-    cd $SCRIPT_DIR/src/libpng-1.6.32;
+    cd $SCRIPT_DIR/src/$LIBPNG_VER;
     cp -fv ../../build-scripts/libpng-android-build.sh ./;
     ./libpng-android-build.sh;
     } &&
     {
-    cd ../libiconv-1.15;
+    cd $SCRIPT_DIR/src/$LIBICONV_VER;
     cp -fv ../../build-scripts/libiconv-android-build.sh ./;
     ./libiconv-android-build.sh;
     } &&
     {
-    cd ../libffi-3.2.1;
+    cd $SCRIPT_DIR/src/$LIBFFI_VER;
     cp -fv ../../build-scripts/libffi-android-build.sh ./;
     ./libffi-android-build.sh;
     } &&
     {
-    cd ../pcre-8.41;
+    cd $SCRIPT_DIR/src/$PCRE_VER;
     cp -fv ../../build-scripts/pcre-android-build.sh ./;
     ./pcre-android-build.sh;
     } &&
     {
-    cd ../gettext-0.19.8.1;
+    cd $SCRIPT_DIR/src/$GETTEXT_VER;
     cp -fv ../../build-scripts/gettext-android-build.sh ./;
     ./gettext-android-build.sh;
     } &&
     {
-    cd ../glib-2.54.0;
+    cd $SCRIPT_DIR/src/$GLIB_VER;
     cp -fv ../../build-scripts/glib-android-build.sh ./;
     ./glib-android-build.sh;
-    }
+    } &&
+    #copy .so files to output directory
+    for sharedLib in ${JNI_LIBS[@]}
+    do
+        cp -fv $LIB_DIR/$sharedLib $SCRIPT_DIR/../output
+    done
 ;;
 
 clean)
-    cd $SCRIPT_DIR/src/libffi-3.2.1
+    cd $SCRIPT_DIR/src/$LIBFFI_VER
     make clean
-    cd ../libiconv-1.15
+    cd $SCRIPT_DIR/src/$LIBICONV_VER
     make clean
-    cd ../libpng-1.6.32
+    cd $SCRIPT_DIR/src/$LIBPNG_VER
     make clean
-    cd ../pcre-8.41
+    cd $SCRIPT_DIR/src/$PCRE_VER
     make clean
-    cd ../gettext-0.19.8.1
+    cd $SCRIPT_DIR/src/$GETTEXT_VER
     make clean && make distclean
-    cd ../glib-2.54.0
+    cd $SCRIPT_DIR/src/$GLIB_VER
     make clean
     echo -e "\
     glib_cv_long_long_format=ll\n\

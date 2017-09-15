@@ -1,5 +1,5 @@
 --- DarkGalgame/build/external/src/gettext-0.19.8.1/gettext-tools/libgrep/nl_langinfo.c	2016-06-11 21:00:26.000000000 +0800
-+++ DarkGalgame-dev/build/external/src/gettext-0.19.8.1/gettext-tools/libgrep/nl_langinfo.c	2017-09-14 15:44:23.738269444 +0800
++++ DarkGalgame-dev/build/external/src/gettext-0.19.8.1/gettext-tools/libgrep/nl_langinfo.c	2017-09-15 17:37:39.916495236 +0800
 @@ -28,6 +28,24 @@
  # include <stdio.h>
  #endif
@@ -25,11 +25,3 @@
  /* Return the codeset of the current locale, if this is easily deducible.
     Otherwise, return "".  */
  static char *
---- DarkGalgame/build/external/src/glib-2.54.0/android.cache	1970-01-01 08:00:00.000000000 +0800
-+++ DarkGalgame-dev/build/external/src/glib-2.54.0/android.cache	2017-09-14 15:52:22.695025119 +0800
-@@ -0,0 +1,5 @@
-+    glib_cv_long_long_format=ll
-+    glib_cv_stack_grows=no
-+    glib_cv_uscore=no
-+    ac_cv_func_posix_getpwuid_r=no
-+    ac_cv_func_posix_getgrgid_r=no    

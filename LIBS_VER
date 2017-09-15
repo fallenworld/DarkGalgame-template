@@ -1,0 +1,8 @@
+QEMU_VER="qemu-2.10.0"
+WINE_VER=""
+GETTEXT_VER="gettext-0.19.8.1"
+GLIB_VER="glib-2.54.0"
+LIBFFI_VER="libffi-3.2.1"
+LIBICONV_VER="libiconv-1.15"
+LIBPNG_VER="libpng-1.6.32"
+PCRE_VER="pcre-8.41"

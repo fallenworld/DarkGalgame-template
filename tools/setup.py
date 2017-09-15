@@ -1,20 +1,27 @@
 #!/usr/bin/env python
 
+
 import os
 import fileinput
 from optparse import OptionParser
 
-EXTERNAL_BUILD_SCRIPTS_DIR = "build/external/build-scripts"
+
+SCRIPT_DIR = os.path.split(os.path.realpath(__file__))[0]
+
 ANDROID_BUILD_TOOLS_DIR = "build/android"
 ANDROID_MAKE_TOOLS_SCRIPT = "build/tools/make_standalone_toolchain.py"
 
-EXTERNAL_BUILD_SCRIPTS = [
-    "gettext-android-build.sh", 
-    "glib-android-build.sh", 
-    "libffi-android-build.sh", 
-    "libiconv-android-build.sh", 
-    "libpng-android-build.sh", 
-    "pcre-android-build.sh"]
+MAIN_BUILD_SCRIPTS_DIR = "build/build-scripts"
+MAIN_BUILD_SCRIPTS = ["qemu-android-build.sh", 
+                      "wine-android-build.sh"]
+
+EXTERNAL_BUILD_SCRIPTS_DIR = "build/external/build-scripts"
+EXTERNAL_BUILD_SCRIPTS = ["gettext-android-build.sh", 
+                          "glib-android-build.sh", 
+                          "libffi-android-build.sh", 
+                          "libiconv-android-build.sh", 
+                          "libpng-android-build.sh", 
+                          "pcre-android-build.sh"]
 
 
 def fileReplace(fileName, rawStr, replaceStr):
@@ -24,9 +31,37 @@ def fileReplace(fileName, rawStr, replaceStr):
     targetFile.write(fileContent.replace(rawStr, replaceStr))
     targetFile.truncate()
     targetFile.close()
+
+
+def setupLibsVer(projDir, fileName):
+    libsVerFile = open(os.path.join(projDir, "LIBS_VER"), "r+")
+    libsVerStr = libsVerFile.read()
+    libsVerFile.close()
+    fileReplace(fileName, "#{*LIBS_VER*}#", libsVerStr)
     
 
+def setupBuildScripts(projDir, scriptsDir, scriptList, apiVersion, androidBuildDir):
+    for scriptFile in scriptList:
+        fullFileName = os.path.join(projDir, scriptsDir, scriptFile)
+        fileReplace(fullFileName, "#{*API_VERSION*}#", apiVersion)
+        fileReplace(fullFileName, "#{*ANDROID_BUILD*}#", androidBuildDir)
+
+
+def setupExternalScripts(projDir, apiVersion, androidBuildDir):
+    setupBuildScripts(projDir, EXTERNAL_BUILD_SCRIPTS_DIR, EXTERNAL_BUILD_SCRIPTS, apiVersion, androidBuildDir)
+    fileReplace(os.path.join(projDir, "build/external/external.sh"), "#{*ANDROID_BUILD*}#", androidBuildDir)
+    
+    
+def setupMainScripts(projDir, apiVersion, androidBuildDir):
+    setupLibsVer(projDir, os.path.join(projDir, "tools/patch.py"))
+    setupLibsVer(projDir, os.path.join(projDir, "tools/build.py"))
+    setupBuildScripts(projDir, MAIN_BUILD_SCRIPTS_DIR, MAIN_BUILD_SCRIPTS, apiVersion, androidBuildDir)
+
+
 def main():  
+    #enter py script file path
+    os.chdir(os.path.split(os.path.realpath(__file__))[0])
+    
     #parse command options
     parser = OptionParser()
     parser.add_option("-a", "--api", dest="api", help="target android API version", metavar="API") 
@@ -57,14 +92,14 @@ def main():
     
     #copy original files to output directory
     print "copying project files ..."
-    projectDir = os.path.abspath(os.path.join(options.output, options.projectName))
-    if not os.path.exists(projectDir):
-        os.makedirs(projectDir)
+    projDir = os.path.abspath(os.path.join(options.output, options.projectName))
+    if not os.path.exists(projDir):
+        os.makedirs(projDir)
     else:
         overwrite = raw_input("%s already exists, do you want to overwrite? [y/n] " % options.projectName).strip()
         if (overwrite != "y"):
             exit(1)
-    ret = os.system("cp -fr .. %s" % (projectDir)) >> 8
+    ret = os.system("cp -fr .. %s" % (projDir)) >> 8
     if ret != 0:
         print "cannot copy project files"
         print "\nfailed!"
@@ -72,7 +107,7 @@ def main():
      
     #set up android build tools
     print "creating android build standalone toolchain ..."
-    androidBuildDir = os.path.join(projectDir, ANDROID_BUILD_TOOLS_DIR)
+    androidBuildDir = os.path.join(projDir, ANDROID_BUILD_TOOLS_DIR)
     makeToolsScript = os.path.join(options.ndk, ANDROID_MAKE_TOOLS_SCRIPT)
     ret = os.system("%s --force --unified-headers --arch arm --api %s --install-dir %s" 
                     % (makeToolsScript, options.api, androidBuildDir)) >> 8
@@ -81,15 +116,21 @@ def main():
         print "\nfailed!"
         exit(-1)
         
-
-    #setup external library build scripts
+    #build scripts
     print "setting up build scripts ..."
-    for scriptFiles in EXTERNAL_BUILD_SCRIPTS:
-        fullFileName = os.path.join(projectDir, EXTERNAL_BUILD_SCRIPTS_DIR, scriptFiles)
-        fileReplace(fullFileName, "{*API_VERSION*}", options.api)
-        fileReplace(fullFileName, "{*ANDROID_BUILD*}", androidBuildDir)
+    setupExternalScripts(projDir, options.api, androidBuildDir)
+    setupMainScripts(projDir, options.api, androidBuildDir)
     
+    #patch
+    print "patching source code ..."
+    ret = os.system("%s apply" % os.path.join(projDir, "tools/patch.py")) >> 8
+    if ret != 0:
+        print "cannot patch source code"
+        print "\nfailed!"
+        exit(-1)
+        
     print "\nsuccess!"
+
 
 if __name__ == "__main__":
     main()

@@ -12,16 +12,16 @@ ANDROID_BUILD_TOOLS_DIR = "build/android"
 ANDROID_MAKE_TOOLS_SCRIPT = "build/tools/make_standalone_toolchain.py"
 
 MAIN_BUILD_SCRIPTS_DIR = "build/build-scripts"
-MAIN_BUILD_SCRIPTS = ["qemu-android-build.sh", 
-                      "wine-android-build.sh"]
-
 EXTERNAL_BUILD_SCRIPTS_DIR = "build/external/build-scripts"
-EXTERNAL_BUILD_SCRIPTS = ["gettext-android-build.sh", 
-                          "glib-android-build.sh", 
-                          "libffi-android-build.sh", 
-                          "libiconv-android-build.sh", 
-                          "libpng-android-build.sh", 
-                          "pcre-android-build.sh"]
+
+ALL_BUILD_SCRIPTS = [ os.path.join(MAIN_BUILD_SCRIPTS_DIR, "qemu-android-build.sh"),
+                      os.path.join(MAIN_BUILD_SCRIPTS_DIR, "wine-android-build.sh"),
+                      os.path.join(EXTERNAL_BUILD_SCRIPTS_DIR, "gettext-android-build.sh"), 
+                      os.path.join(EXTERNAL_BUILD_SCRIPTS_DIR, "glib-android-build.sh"),
+                      os.path.join(EXTERNAL_BUILD_SCRIPTS_DIR, "libffi-android-build.sh"),
+                      os.path.join(EXTERNAL_BUILD_SCRIPTS_DIR, "libiconv-android-build.sh"),
+                      os.path.join(EXTERNAL_BUILD_SCRIPTS_DIR, "libpng-android-build.sh"),
+                      os.path.join(EXTERNAL_BUILD_SCRIPTS_DIR, "pcre-android-build.sh") ]
 
 
 def fileReplace(fileName, rawStr, replaceStr):
@@ -39,23 +39,20 @@ def setupLibsVer(projDir, fileName):
     libsVerFile.close()
     fileReplace(fileName, "#{*LIBS_VER*}#", libsVerStr)
     
-
-def setupBuildScripts(projDir, scriptsDir, scriptList, apiVersion, androidBuildDir):
-    for scriptFile in scriptList:
-        fullFileName = os.path.join(projDir, scriptsDir, scriptFile)
-        fileReplace(fullFileName, "#{*API_VERSION*}#", apiVersion)
-        fileReplace(fullFileName, "#{*ANDROID_BUILD*}#", androidBuildDir)
-
-
-def setupExternalScripts(projDir, apiVersion, androidBuildDir):
-    setupBuildScripts(projDir, EXTERNAL_BUILD_SCRIPTS_DIR, EXTERNAL_BUILD_SCRIPTS, apiVersion, androidBuildDir)
-    fileReplace(os.path.join(projDir, "build/external/external.sh"), "#{*ANDROID_BUILD*}#", androidBuildDir)
     
-    
-def setupMainScripts(projDir, apiVersion, androidBuildDir):
+def setupAllToolScripts(projDir, args):
     setupLibsVer(projDir, os.path.join(projDir, "tools/patch.py"))
     setupLibsVer(projDir, os.path.join(projDir, "tools/build.py"))
-    setupBuildScripts(projDir, MAIN_BUILD_SCRIPTS_DIR, MAIN_BUILD_SCRIPTS, apiVersion, androidBuildDir)
+    fileReplace(os.path.join(projDir, "build/external/external.sh"), "#{*ANDROID_BUILD*}#", args["buildDir"])
+
+
+def setupAllBuildScripts(projDir, scriptList, args):
+    for scriptFile in scriptList:
+        fullFileName = os.path.join(projDir, scriptFile)
+        fileReplace(fullFileName, "#{*ANDROID_BUILD*}#", args["buildDir"])
+        fileReplace(fullFileName, "#{*API_VERSION*}#", args["apiVer"])
+        fileReplace(fullFileName, "#{*GRADLE_BIN_PATH*}#", args["gradlePath"])
+        fileReplace(fullFileName, "#{*ANDROID_SDK_PATH*}#", args["sdkDir"])
 
 
 def main():  
@@ -66,6 +63,8 @@ def main():
     parser = OptionParser()
     parser.add_option("-a", "--api", dest="api", help="target android API version", metavar="API") 
     parser.add_option("-n", "--ndk", dest="ndk", help="your android NDK directory", metavar="NDK_DIR") 
+    parser.add_option("-s", "--sdk", dest="sdk", help="your android SDK directory", metavar="SDK_DIR") 
+    parser.add_option("-g", "--gradle", dest="gradle", help="your gradle bin path", metavar="GRADLE_PATH") 
     parser.add_option("-o", "--output", dest="output", help="directory to output the project files", 
                       metavar="OUTPUT_DIR")
     (options, args) = parser.parse_args()
@@ -74,18 +73,30 @@ def main():
         parser.error("api version not set")
     if options.ndk == None:
         parser.error("android NDK directory not set")
+    if options.sdk == None:
+        parser.error("android SDK directory not set")
+    if options.gradle == None:
+        parser.error("gradle bin path not set")
     if options.output == None:
         parser.error("output directory not set")
-    if options.ndk[len(options.ndk) - 1] == '/':
-        options.ndk = options.ndk[:(len(options.ndk) - 1)]
-    if options.output[len(options.output) - 1] == '/':
-        options.output = options.output[:(len(options.output) - 1)]
     if not options.api.isdigit():
         parser.error("api version %s is not a vaild number" % options.api)
     if not os.path.isdir(options.ndk):
         parser.error("ndk directory %s not exists" % options.ndk)
+    if not os.path.isdir(options.sdk):
+        parser.error("sdk directory %s not exists" % options.sdk)
+    if not os.path.isdir(options.gradle):
+        parser.error("gradle bin path %s not exists" % options.gradle)
     if not os.path.isdir(options.output):
         parser.error("output directory %s not exists" % options.output)
+    if options.ndk[len(options.ndk) - 1] == '/':
+        options.ndk = options.ndk[:(len(options.ndk) - 1)]
+    if options.sdk[len(options.sdk) - 1] == '/':
+        options.sdk = options.sdk[:(len(options.sdk) - 1)]
+    if options.gradle[len(options.gradle) - 1] == '/':
+        options.gradle = options.gradle[:(len(options.gradle) - 1)]
+    if options.output[len(options.output) - 1] == '/':
+        options.output = options.output[:(len(options.output) - 1)]
         
     options.projectName = "DarkGalgame-dev"
         
@@ -118,8 +129,12 @@ def main():
         
     #build scripts
     print "setting up build scripts ..."
-    setupExternalScripts(projDir, options.api, androidBuildDir)
-    setupMainScripts(projDir, options.api, androidBuildDir)
+    args = {"apiVer": options.api, 
+            "buildDir": androidBuildDir, 
+            "sdkDir": options.sdk, 
+            "gradlePath": options.gradle}
+    setupAllToolScripts(projDir, args)
+    setupAllBuildScripts(projDir, ALL_BUILD_SCRIPTS, args)
     
     #patch
     print "patching source code ..."

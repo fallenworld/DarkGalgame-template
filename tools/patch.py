@@ -10,14 +10,7 @@ SCRIPT_DIR = os.path.split(os.path.realpath(__file__))[0]
 TEMPLATE_DIR_NAME = "DarkGalgame"
 INSTANCE_DIR_NAME = "DarkGalgame-dev"
 
-QEMU_VER="qemu-2.10.0"
-WINE_VER=""
-GETTEXT_VER="gettext-0.19.8.1"
-GLIB_VER="glib-2.54.0"
-LIBFFI_VER="libffi-3.2.1"
-LIBICONV_VER="libiconv-1.15"
-LIBPNG_VER="libpng-1.6.32"
-PCRE_VER="pcre-8.41"
+#{*LIBS_VER*}#
 
 
 EXTERNAL_SRC_DIR = "build/external/src"

@@ -1,0 +1,11 @@
+MODULE    = wsdapi.dll
+IMPORTLIB = wsdapi
+IMPORTS   = user32 ws2_32
+
+C_SRCS = \
+	address.c \
+	discovery.c \
+	main.c \
+	memory.c \
+	msgparams.c \
+	xml.c
